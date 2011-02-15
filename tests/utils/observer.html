@@ -1,0 +1,333 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+    <head>
+        <title>test</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+        <script type="text/javascript" src="../../third-party/yui-min.js"></script>
+        <script type="text/javascript" src="../../third-party/yuitest-min.js"></script>
+        <script type="text/javascript" src="../TestRunner.js"></script>
+
+        <script type="text/javascript" src="../../js/core.js"></script>
+        <script type="text/javascript" src="../../js/utils/observer.js"></script>
+    </head>
+    <body>
+        <div></div>
+
+        <script type="text/javascript">
+(function() {
+    var observer;
+
+    var testRunner = new TestRunner(new YUITest.TestCase({
+        name: "Observer Tests",
+
+        setUp: function() {
+            observer = w.core.observer();
+        },
+
+        "has method register": function() {
+            YUITest.Assert.isFunction(observer.register);
+        },
+
+        "has method listen": function() {
+            YUITest.Assert.isFunction(observer.listen);
+        },
+
+        "has method fire": function() {
+            YUITest.Assert.isFunction(observer.fire);
+        },
+
+        "listen returns object with method unsubscribe": function() {
+            observer.register("event_name");
+
+            var e = observer.listen("event_name", function() {});
+
+            YUITest.Assert.isObject(e);
+            YUITest.ObjectAssert.ownsKey("unsubscribe", e);
+            YUITest.Assert.isFunction(e.unsubscribe);
+        },
+
+        "when trying to listen for nonregistered event the error is thrown": function() {
+            YUITest.Assert.throwsError("Event 'non-registered-event' is not registered", function() {
+                observer.listen("non-registered-event", function() {});
+            });
+        },
+
+        "when trying to fire nonregistered event the error is thrown": function() {
+            YUITest.Assert.throwsError("Event 'non-registered-event' is not registered", function() {
+                observer.fire("non-registered-event");
+            });
+        },
+
+        "when calling fire for registered event callback is called": function() {
+            observer.register("event");
+            observer.listen("event", function() {
+                YUITest.Assert.isTrue(true);
+            });
+
+            observer.fire("event");
+        },
+
+        "callback is called after each fire": function() {
+            var countOfEvents = 0;
+
+            observer.register("event");
+            observer.listen("event", function() {
+                ++countOfEvents;
+            });
+
+            observer.fire("event");
+            observer.fire("event");
+            observer.fire("event");
+
+            this.wait(function() {
+                YUITest.Assert.areEqual(3, countOfEvents);
+            }, 100);
+        },
+
+        "fire accepts second argument 'data' that is passed to listeners": function() {
+            observer.register("event");
+            observer.listen("event", function(data) {
+                YUITest.ObjectAssert.areEqual({"some": "data"}, data);
+            });
+
+            observer.fire("event", {"some": "data"});
+        },
+
+        "for simple event data is passed to all callbacks": function() {
+            var countOfEvents = 0;
+
+            observer.register("event");
+            observer.listen("event", function(data) {
+                countOfEvents += 1;
+                YUITest.ObjectAssert.areEqual({"some": "data"}, data);
+            });
+
+            observer.listen("event", function(data) {
+                countOfEvents += 10;
+                YUITest.ObjectAssert.areEqual({"some": "data"}, data);
+            });
+
+            observer.fire("event", {"some": "data"});
+
+            this.wait(function() {
+                YUITest.Assert.areEqual(11, countOfEvents);
+            }, 100);
+        },
+
+        "unsubscribe stops triggering callback on fire": function() {
+            var countOfEvents = 0;
+
+            observer.register("event");
+
+            var e = observer.listen("event", function() {
+                ++countOfEvents;
+            });
+
+            observer.fire("event");
+            observer.fire("event");
+
+            e.unsubscribe();
+
+            observer.fire("event");
+
+            this.wait(function() {
+                YUITest.Assert.areEqual(2, countOfEvents);
+            }, 100);
+        },
+
+        "usubscribe can be also called from inside the callback": function() {
+            var countOfEvents = 0;
+
+            observer.register("event");
+
+            var e = observer.listen("event", function() {
+                ++countOfEvents;
+                e.unsubscribe();
+            });
+
+            observer.fire("event");
+            observer.fire("event");
+
+            this.wait(function() {
+                YUITest.Assert.areEqual(1, countOfEvents);
+            }, 100);
+        },
+
+        "registerOneTime registeres event that is fired only once": function() {
+            var countOfEvents = 0;
+
+            observer.registerOneTime("event");
+
+            var e = observer.listen("event", function() {
+                ++countOfEvents;
+            });
+
+            observer.fire("event");
+            observer.fire("event");
+
+            this.wait(function() {
+                YUITest.Assert.areEqual(1, countOfEvents);
+            }, 100);
+        },
+
+        "for oneTime event data is passed to all callbacks": function() {
+            var countOfEvents = 0;
+
+            observer.registerOneTime("event");
+            observer.listen("event", function(data) {
+                countOfEvents += 1;
+                YUITest.ObjectAssert.areEqual({"some": "data"}, data);
+            });
+
+            observer.listen("event", function(data) {
+                countOfEvents += 10;
+                YUITest.ObjectAssert.areEqual({"some": "data"}, data);
+            });
+
+            observer.fire("event", {"some": "data"});
+
+            this.wait(function() {
+                YUITest.Assert.areEqual(11, countOfEvents);
+            }, 100);
+        },
+
+        "for oneTime event data is passed to callbacks that started to listen after fire": function() {
+            var countOfEvents = 0;
+
+            observer.registerOneTime("event");
+            observer.listen("event", function(data) {
+                countOfEvents += 1;
+                YUITest.ObjectAssert.areEqual({"some": "data"}, data);
+            });
+
+            observer.fire("event", {"some": "data"});
+
+            observer.listen("event", function(data) {
+                countOfEvents += 10;
+                YUITest.ObjectAssert.areEqual({"some": "data"}, data);
+            });
+
+            this.wait(function() {
+                YUITest.Assert.areEqual(11, countOfEvents);
+            }, 100);
+        },
+
+        "for oneTime event listen after firing also return unregister method": function() {
+            observer.registerOneTime("event");
+
+            observer.listen("event", function(data) {
+                YUITest.ObjectAssert.areEqual({"some": "data"}, data);
+            });
+
+            observer.fire("event", {"some": "data"});
+
+            observer.listen("event", function() {}).unsubscribe();
+        },
+
+        "register also registers 'parent' events": function() {
+            observer.register("A.B.C");
+
+            observer.listen("A", function() {
+                YUITest.Assert.isTrue(true);
+            });
+
+            observer.fire("A");
+        },
+
+        "register of 'child' event does not override 'parent' event": function() {
+            var countOfEvents = 0;
+
+            observer.register("A.B");
+            observer.registerOneTime("A.B.C");
+
+            observer.listen("A.B", function() {
+                ++countOfEvents;
+            });
+
+            observer.fire("A.B");
+            observer.fire("A.B");
+
+            this.wait(function() {
+                YUITest.Assert.areEqual(2, countOfEvents);
+            }, 100);
+        },
+
+        "register of exact event name overrides last previous registration": function() {
+            var countOfEvents = 0;
+
+            observer.registerOneTime("A.B.C");
+            observer.register("A.B");
+
+            observer.listen("A.B", function() {
+                ++countOfEvents;
+            });
+
+            observer.fire("A.B");
+            observer.fire("A.B");
+
+            this.wait(function() {
+                YUITest.Assert.areEqual(2, countOfEvents);
+            }, 100);
+        },
+
+        "fire also triggers parent events": function() {
+            var countOfEvents = 0;
+
+            observer.register("A.B.C");
+
+            observer.listen("A", function() {
+                countOfEvents += 100;
+            });
+
+            observer.listen("A.B", function() {
+                countOfEvents += 10;
+            });
+
+            observer.listen("A.B.C", function() {
+                countOfEvents += 1;
+            });
+
+            observer.fire("A.B.C");
+            observer.fire("A.B");
+            observer.fire("A");
+
+            this.wait(function() {
+                YUITest.Assert.areEqual(321, countOfEvents);
+            }, 100);
+        },
+
+        "fire triggers parent oneTime callbacks only once": function() {
+            var countOfEvents = 0;
+
+            observer.register("A.B.C");
+            observer.registerOneTime("A");
+
+            observer.listen("A", function() {
+                countOfEvents += 100;
+            });
+
+            observer.listen("A.B", function() {
+                countOfEvents += 10;
+            });
+
+            observer.listen("A.B.C", function() {
+                countOfEvents += 1;
+            });
+
+            observer.fire("A.B.C");
+            observer.fire("A.B");
+            observer.fire("A");
+
+            this.wait(function() {
+                YUITest.Assert.areEqual(121, countOfEvents);
+            }, 100);
+        }
+
+    }));
+
+    testRunner.run();
+})();
+        </script>
+    </body>
+</html>
