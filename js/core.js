@@ -15,6 +15,8 @@
             }
             root = root[name];
         }
+
+        return root;
     }
 
 })(window.w = {});

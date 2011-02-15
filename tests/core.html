@@ -36,6 +36,12 @@ var testRunner = new TestRunner(new YUITest.TestCase({
         w.core.registerNs('some.complicated.test.ns');
 
         YUITest.Assert.isObject(w.some.complicated.test.ns);
+    },
+
+    "core.registerNs returns created namespace": function() {
+        var ns = w.core.registerNs('some.other.ns');
+
+        YUITest.Assert.areSame(w.some.other.ns, ns);
     }
 
 }));
