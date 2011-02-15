@@ -1,0 +1,45 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+    <head>
+        <title>Tests</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+        <script type="text/javascript" src="../third-party/yui-min.js"></script>
+        <script type="text/javascript" src="../third-party/yuitest-min.js"></script>
+        <script type="text/javascript" src="TestRunner.js"></script>
+
+        <script type="text/javascript" src="../js/core.js"></script>
+    </head>
+    <body>
+        <div></div>
+
+        <script type="text/javascript">
+var testRunner = new TestRunner(new YUITest.TestCase({
+    name: "Core Tests",
+
+    "namespace 'w' is present and is an object": function() {
+        YUITest.ObjectAssert.ownsKey('w', window);
+        YUITest.Assert.isObject(w);
+    },
+
+    "namespace 'w.core' is present": function() {
+        YUITest.ObjectAssert.ownsKey('core', w);
+    },
+
+    "core.registerNs creates namespace under 'w' object": function() {
+        w.core.registerNs('someTestNS');
+
+        YUITest.ObjectAssert.ownsKey('someTestNS', w);
+    },
+
+    "core.registerNs creates namespace with complicated names": function() {
+        w.core.registerNs('some.complicated.test.ns');
+
+        YUITest.Assert.isObject(w.some.complicated.test.ns);
+    }
+
+}));
+testRunner.run();
+        </script>
+    </body>
+</html>
