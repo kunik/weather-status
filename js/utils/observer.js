@@ -13,9 +13,7 @@
             },
 
             listen: function(name, callback) {
-                if (!isRegistered(name)) {
-                    throw new Error("Event '" + name + "' is not registered");
-                }
+                validateEvent(name, "Trying to listen for nonregistered event '" + name + "'");
 
                 events[name].listeners.push(callback);
 
@@ -32,6 +30,12 @@
 
             fire: fireEvent
         };
+
+        function validateEvent(name, errorMessage) {
+            if (!isRegistered(name)) {
+                throw new Error(errorMessage || "Event '" + name + "' is not registered");
+            }
+        }
 
         function registerEvents(name, oneTime) {
             registerEvent(name, oneTime);
@@ -56,9 +60,7 @@
         }
 
         function fireEvent(name, data) {
-            if (!isRegistered(name)) {
-                throw new Error("Event '" + name + "' is not registered");
-            }
+            validateEvent(name, "Trying to fire nonregistered event '" + name + "'");
 
             storeData(name, data);
 

@@ -48,13 +48,13 @@
         },
 
         "when trying to listen for nonregistered event the error is thrown": function() {
-            YUITest.Assert.throwsError("Event 'non-registered-event' is not registered", function() {
+            YUITest.Assert.throwsError("Trying to listen for nonregistered event 'non-registered-event'", function() {
                 observer.listen("non-registered-event", function() {});
             });
         },
 
         "when trying to fire nonregistered event the error is thrown": function() {
-            YUITest.Assert.throwsError("Event 'non-registered-event' is not registered", function() {
+            YUITest.Assert.throwsError("Trying to fire nonregistered event 'non-registered-event'", function() {
                 observer.fire("non-registered-event");
             });
         },
