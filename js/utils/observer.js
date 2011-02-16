@@ -1,5 +1,5 @@
 (function(app) {
-    app.core.registerNs('core.observer')
+    app.core.registerNs('core.observer');
     app.core.observer = function() {
         var events = {};
 
